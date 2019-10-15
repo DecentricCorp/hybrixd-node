@@ -12,23 +12,6 @@ NODEJS="$HYBRIXD/nodejs"
 COMMON="$HYBRIXD/common"
 INTERFACE="$HYBRIXD/interface"
 WEB_WALLET="$HYBRIXD/web-wallet"
-ENVIRONMENT="$1"
-
-if [ "$ENVIRONMENT" = "dev" ]; then
-    URL_COMMON="https://gitlab.com/hybrix/hybrixd/common.git"
-    URL_NODEJS="https://www.gitlab.com/hybrix/hybrixd/dependencies/nodejs.git"
-    echo "[i] Environment is development..."
-elif [ "$ENVIRONMENT" = "public" ]; then
-    URL_COMMON="https://github.com/hybrix-io/hybrixd-common.git"
-    URL_NODEJS="https://github.com/hybrix-io/nodejs.git"
-    echo "[i] Environment is public..."
-else
-    echo "[!] Unknown Environment (please use npm run setup[:dev])"
-    export PATH="$OLDPATH"
-    cd "$WHEREAMI"
-    exit 1
-fi
-
 
 if [ "`uname`" = "Darwin" ]; then
     SYSTEM="darwin-x64"
@@ -38,7 +21,13 @@ elif [ "`uname -m`" = "x86_64" ]; then
     SYSTEM="x86_64"
 else
     echo "[!] Unknown Architecture (or incomplete implementation)"
-    exit 1;
+#    exit 1;
+fi
+
+if [ -e "$HYBRIXD/hybrixd-node" ]; then
+    NODE="$HYBRIXD/hybrixd-node"
+else
+    NODE="$HYBRIXD/node"
 fi
 
 # NODE_BINARIES
@@ -49,10 +38,7 @@ if [ ! -e "$NODE/node_binaries" ];then
     if [ ! -e "$NODEJS" ];then
         cd "$HYBRIXD"
         echo " [i] Clone node js runtimes files"
-        git clone "$URL_NODEJS"
-        if [ "$ENVIRONMENT" = "public" ]; then
-            ln -sf "hybrixd-dependencies-nodejs" "nodejs"
-        fi
+        git clone https://gitlab.com/hybrix/hybrixd/dependencies/nodejs.git
     fi
     echo " [i] Link node_binaries"
     ln -sf "$NODEJS/$SYSTEM" "$NODE/node_binaries"
@@ -69,17 +55,15 @@ if [ ! -e "$NODE/common" ];then
     if [ ! -e "$COMMON" ];then
         cd "$HYBRIXD"
         echo " [i] Clone common files"
-        git clone "$URL_COMMON"
-        if [ "$ENVIRONMENT" = "public" ]; then
-            ln -sf "hybrixd-common" "common"
-        fi
+        git clone https://www.gitlab.com/hybrix/hybrixd/common.git
     fi
     echo " [i] Link common files"
     ln -sf "$COMMON" "$NODE/common"
+
 fi
 
 # GIT HOOKS
 sh "$COMMON/hooks/hooks.sh" "$NODE"
 
-export PATH="$OLDPATH"
 cd "$WHEREAMI"
+export PATH="$OLDPATH"
